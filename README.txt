@@ -1,0 +1,1 @@
+Netlify bundle for the 3D game. Drag this entire folder to https://app.netlify.com/drop. index.html is the 3D home page; index-2d.html is the 2D version. Keep css/, js/, and supabase.sql beside the HTML files.

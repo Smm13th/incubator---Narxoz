@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Асық Arena 3D — асық ату</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0"></script>
+<link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+<h1>Асық Arena 3D <small>Студенческая лига · объёмная арена</small></h1>
+<main>
+
+<section id="menu">
+  <div class="user-badge" id="uBadge">
+    <span id="uState">Гость (Локальный режим)</span>
+    <div class="row" style="margin:0"><button id="bSignOut" class="alt hide" style="padding:4px 8px;font-size:12px">Выйти</button>
+    <button id="bAuthModal" class="alt" style="padding:4px 8px;font-size:12px">Войти / Профиль</button></div>
+  </div>
+  <div class="row">
+    <button id="bDaily">Ежедневное испытание</button>
+    <button id="bEdit" class="alt">Редактор</button>
+    <button id="bLeaders" class="alt">🏆 Рейтинг вузов</button>
+    <button id="bMulti" class="alt hide" aria-hidden="true" tabindex="-1">⚔️ Мультиплеер</button>
+    <button id="bShop" class="alt">🎨 Магазин</button>
+    <button class="alt" onclick="location.href='index-2d.html'">↩ 2D версия</button>
+  </div>
+  <div class="grid" id="levels"></div>
+  <details>
+    <summary>Правила и Студенческая лига</summary>
+    <p>Потяни от любой точки поля назад и отпусти: направление броска противоположно движению пальца, сила зависит от длины натяжения.
+    Пунктир показывает, куда сақа докатится без столкновений.</p>
+    <p><b>Очки:</b> 1 за каждый выбитый асык, +1 за комбо (2 и больше за бросок).
+    <b>Звёзды:</b> ★ — ≥50%, ★★ — ≥75%, ★★★ — 100% выбитого кона.</p>
+    <p>Дополнительные правила и описание режима лиги — в <a href="README.md" style="color:var(--gold)">README</a>.</p>
+  </details>
+</section>
+
+<section id="play" class="hide">
+  <div id="hud"><button class="alt" id="bBack">← Меню</button><span id="hT"></span><span id="hS"></span></div>
+  <div id="cv" role="application" aria-label="Трёхмерное игровое поле"></div>
+  <div id="hint">Трёхмерная площадка · потяни назад и отпусти</div>
+  <div class="row hide" id="edbar">
+    <button id="eClear" class="alt">Очистить</button>
+    <button id="ePlay">Играть</button>
+    <button id="eLink" class="alt">Копировать ссылку</button>
+  </div>
+</section>
+
+</main>
+
+<!-- Модальное окно результатов -->
+<div id="modal" class="modal hide"><div class="modal-content" id="mbox"></div></div>
+
+<!-- Модальное окно Авторизации -->
+<div id="authModal" class="modal hide">
+  <div class="modal-content">
+    <h2 id="authTitle">Вход в аккаунт</h2>
+    <form id="fAuth" onsubmit="return false;">
+      <input type="email" id="authEmail" placeholder="Email" required>
+      <input type="password" id="authPass" placeholder="Пароль" required>
+      <div id="regFields" class="hide">
+        <input type="text" id="authName" placeholder="Имя / Никнейм" maxlength="20">
+        <label style="display:block;text-align:left;font-size:12px;color:var(--sand)">Университет:</label>
+        <select id="authUni">
+          <option value="Университет Нархоз">Университет Нархоз</option>
+          <option value="КазНУ им. аль-Фараби">КазНУ им. аль-Фараби</option>
+          <option value="AITU (Astana IT University)">AITU</option>
+          <option value="ЕНУ им. Л.Н. Гумилева">ЕНУ им. Л.Н. Гумилева</option>
+          <option value="КБТУ">КБТУ</option>
+          <option value="МУИТ">МУИТ</option>
+          <option value="SDU">SDU</option>
+          <option value="Другой ВУЗ">Другой ВУЗ</option>
+        </select>
+      </div>
+      <button id="bAuthSubmit" type="submit" style="width:100%">Войти</button>
+    </form>
+    <p id="authErr" style="color:var(--brick);font-size:14px;margin:8px 0"></p>
+    <div class="row" style="justify-content:center">
+      <button class="alt" id="bToggleReg">Нет аккаунта? Зарегистрироваться</button>
+      <button class="alt" id="bAuthClose">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно Лидерборда -->
+<div id="leaderModal" class="modal hide">
+  <div class="modal-content">
+    <h2>🏆 Рейтинг Асық Arena</h2>
+    <div class="row" style="justify-content:center">
+      <button class="tab-btn active" id="tUni">Топ ВУЗов</button>
+      <button class="tab-btn" id="tPlayers">Топ Игроков</button>
+    </div>
+    <div id="leaderContent">Загрузка...</div>
+    <button class="alt" id="bLeaderClose" style="margin-top:12px">Закрыть</button>
+  </div>
+</div>
+
+<!-- Модальное окно Магазина (Тестовый режим) -->
+<div id="shopModal" class="modal hide">
+  <div class="modal-content">
+    <h2>🎨 Магазин Косметики</h2>
+    <p style="font-size:12px;color:var(--sand)">Тестовый режим: платежи не проводятся, скины включаются сразу.</p>
+    <h3>Скины Сақа</h3>
+    <div id="sakaSkins"></div>
+    <h3>Площадка (Кон)</h3>
+    <div id="groundSkins"></div>
+    <button class="alt" id="bShopClose" style="margin-top:12px">Закрыть</button>
+  </div>
+</div>
+
+<div id="purchaseModal" class="modal hide"><div class="modal-content"><h2 id="purchaseTitle">Покупка скина</h2><p id="purchaseDescription"></p><p id="purchasePrice" style="color:var(--gold);font-weight:700"></p><p style="color:var(--sand)">Тестовый режим, платёж не проводится</p><div class="row" style="justify-content:center"><button id="bPurchaseConfirm">Подтвердить</button><button class="alt" id="bPurchaseCancel">Отмена</button></div></div></div>
+
+<!-- Модальное окно Мультиплеера -->
+<div id="mpModal" class="modal hide">
+  <div class="modal-content">
+    <h2>⚔️ Мультиплеер (Realtime)</h2>
+    <p style="font-size:13px">Игры по очереди с единой физикой в реальном времени.</p>
+    <button id="bCreateRoom" style="width:100%;margin-bottom:10px">Создать комнату</button>
+    <div style="margin:10px 0">
+      <input type="text" id="roomCodeInput" placeholder="Код комнаты (напр. A1B2)" style="text-align:center;letter-spacing:2px;text-transform:uppercase">
+      <button id="bJoinRoom" style="width:100%">Присоединиться</button>
+    </div>
+    <p id="mpStatus" style="font-size:13px;color:var(--gold)"></p>
+    <button class="alt" id="bMpClose" style="margin-top:10px">Закрыть</button>
+  </div>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"}}
+</script>
+<script type="module" src="./js/app.js"></script>
+</body>
+</html>
